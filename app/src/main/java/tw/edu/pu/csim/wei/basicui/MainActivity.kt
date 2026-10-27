@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,8 +22,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -63,6 +66,7 @@ fun Main(modifier: Modifier = Modifier) {
         LazyColumnExample(modifier = Modifier.fillMaxSize())
         ColumnExample(modifier = Modifier.fillMaxSize())
         TextFieldExample(modifier = Modifier.fillMaxSize())
+        LazyRowExample(modifier = Modifier.fillMaxSize())
     }
 }
 
@@ -114,9 +118,6 @@ fun ColumnExample(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(12.dp))
         RowExample()
-
-        Spacer(modifier = Modifier.height(12.dp))
-        LazyRowExample()
     }
 }
 
@@ -141,25 +142,34 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
     )
 
     LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.fillMaxHeight(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        items(animals) { animal ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(horizontal = 4.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = animal.imageRes),
-                    contentDescription = animal.name,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(Color.White)
+        itemsIndexed(animals) { index, animal ->
+            Card(
+                modifier = Modifier
+                    .fillParentMaxWidth(1.0f)
+                    .height(260.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFD0BCFF)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = animal.name)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Image(
+                        painter = painterResource(id = animal.imageRes),
+                        contentDescription = animal.name,
+                        modifier = Modifier.size(150.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "$index ${animal.name}"
+                    )
+                }
             }
         }
     }
