@@ -111,7 +111,7 @@ fun ColumnExample(modifier: Modifier = Modifier) {
     ) {
         Spacer(modifier = Modifier.height(24.dp))
         Text("行動應用軟體開發：基本元件")
-        Text("作者：魏仁楷")
+        Text("作者：魏仁楷 ")
 
         Spacer(modifier = Modifier.height(12.dp))
         Text(text = gestureMessage)
