@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,11 +57,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Main(modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
-        // 底層：LazyColumn 滾動列表
         LazyColumnExample(modifier = Modifier.fillMaxSize())
-
-        // 上層：半透明背景、手勢攔截，並將元件置於最上方
         ColumnExample(modifier = Modifier.fillMaxSize())
+        TextFieldExample(modifier = Modifier.fillMaxSize())
     }
 }
 
@@ -107,10 +107,37 @@ fun ColumnExample(modifier: Modifier = Modifier) {
         Text("作者：魏仁楷")
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = gestureMessage) // 移到圖片上方顯示手勢結果
+        Text(text = gestureMessage)
 
         Spacer(modifier = Modifier.height(16.dp))
-        RowExample() // 圖片在下方
+        RowExample()
+    }
+}
+
+@Composable
+fun TextFieldExample(modifier: Modifier = Modifier) {
+    var inputText by remember { mutableStateOf("") }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(bottom = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Bottom
+    ) {
+        OutlinedTextField(
+            value = inputText,
+            onValueChange = { inputText = it },
+            label = { Text("請輸入文字") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(0.8f)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = if (inputText.isBlank()) "尚未輸入內容" else "您輸入的是：$inputText"
+        )
     }
 }
 
