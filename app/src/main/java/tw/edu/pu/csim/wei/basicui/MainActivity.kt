@@ -48,10 +48,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Main(modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
-        // 底層：LazyColumn 滾動列表
         LazyColumnExample(modifier = Modifier.fillMaxSize())
-
-        // 上層：半透明背景、手勢攔截，並將標題與名字置於最上方
         ColumnExample(modifier = Modifier.fillMaxSize())
     }
 }
@@ -79,7 +76,6 @@ fun LazyColumnExample(modifier: Modifier = Modifier) {
 
 @Composable
 fun ColumnExample(modifier: Modifier = Modifier) {
-    // 建立狀態來記錄目前觸發的手勢訊息
     var gestureMessage by remember { mutableStateOf("請嘗試：短按、連點兩下或長按") }
 
     Column(
@@ -87,22 +83,21 @@ fun ColumnExample(modifier: Modifier = Modifier) {
             .fillMaxSize()
             .background(Color(0x8AE0BBE4))
             .pointerInput(Unit) {
-                // 攔截並監聽各種觸控手勢
                 detectTapGestures(
-                    onTap = { gestureMessage = "偵測到：短按 (Tap)" },
-                    onDoubleTap = { gestureMessage = "偵測到：連點兩下 (Double Tap)" },
-                    onLongPress = { gestureMessage = "偵測到：長按 (Long Press)" }
+                    onTap = { gestureMessage = "短按 (Tap)" },
+                    onDoubleTap = { gestureMessage = "連點兩下 (Double Tap)" },
+                    onLongPress = { gestureMessage = "長按 (Long Press)" }
                 )
             },
-        verticalArrangement = Arrangement.Top, // 讓內容靠上方排列
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(24.dp)) // 頂端間距
+        Spacer(modifier = Modifier.height(24.dp))
         Text("行動應用軟體開發：基本元件")
         Text("作者：魏仁楷")
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = gestureMessage) // 顯示手勢結果
+        Text(text = gestureMessage)
     }
 }
 
