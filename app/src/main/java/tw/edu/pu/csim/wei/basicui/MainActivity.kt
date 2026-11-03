@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.DrawableRes
+import androidx.annotation.RawRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +48,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import tw.edu.pu.csim.wei.basicui.ui.theme.BasicUITheme
 
 class MainActivity : ComponentActivity() {
@@ -71,6 +77,41 @@ fun Main(modifier: Modifier = Modifier) {
         ColumnExample(modifier = Modifier.fillMaxSize())
         TextFieldExample(modifier = Modifier.fillMaxSize())
     }
+}
+
+@Composable
+fun SimpleVideoPlayer(
+    @RawRes videoRes: Int
+) {
+    val context = LocalContext.current
+
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            val uri = "android.resource://${context.packageName}/$videoRes"
+            setMediaItem(MediaItem.fromUri(uri))
+            prepare()
+            playWhenReady = true // 載入完成自動播放
+        }
+    }
+
+    // 利用 DisposableEffect 管理生命週期，離開畫面時自動釋放記憶體
+    DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+    // 將原生的 PlayerView 嵌入 Compose
+    AndroidView(
+        factory = { ctx ->
+            PlayerView(ctx).apply {
+                player = exoPlayer
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp)
+    )
 }
 
 @Composable
@@ -118,17 +159,22 @@ fun ColumnExample(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 💡 影片放在最上面
+        SimpleVideoPlayer(videoRes = R.raw.love)
+
+        Spacer(modifier = Modifier.height(12.dp))
         Text("行動應用軟體開發：基本元件")
         Text("作者：魏仁楷 ")
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(text = gestureMessage)
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         RowExample()
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         LazyRowExample()
     }
 }
@@ -163,8 +209,8 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
         itemsIndexed(animals) { index, animal ->
             Card(
                 modifier = Modifier
-                    .width(180.dp) // 調整卡片寬度，讓它變成較大的區塊
-                    .height(220.dp)
+                    .width(160.dp)
+                    .height(200.dp)
                     .clickable {
                         Toast.makeText(context, "你點擊了第 $index 個動物：${animal.name}", Toast.LENGTH_SHORT).show()
                     },
@@ -176,20 +222,19 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(12.dp),
+                        .padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    // 將圖片改為較大的矩形尺寸，並設定 contentScale 確保圖片不變形
                     Image(
                         painter = painterResource(id = animal.imageRes),
                         contentDescription = animal.name,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(140.dp)
+                            .height(120.dp)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(text = "$index: ${animal.name}")
                 }
             }
@@ -204,7 +249,7 @@ fun TextFieldExample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(bottom = 24.dp),
+            .padding(bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
     ) {
@@ -216,7 +261,7 @@ fun TextFieldExample(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(0.8f)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Text(
             text = if (inputText.isBlank()) "尚未輸入內容" else "您輸入的是：$inputText"
@@ -231,18 +276,18 @@ fun RowExample(modifier: Modifier = Modifier) {
             painter = painterResource(id = R.drawable.android),
             contentDescription = "Android icon",
             modifier = Modifier
-                .size(80.dp)
+                .size(70.dp)
                 .clip(CircleShape)
                 .background(Color.Yellow),
             alpha = 0.6f,
         )
 
-        Spacer(modifier = Modifier.width(20.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
         Image(
             painter = painterResource(id = R.drawable.compose),
             contentDescription = "Compose icon",
-            modifier = Modifier.size(80.dp)
+            modifier = Modifier.size(70.dp)
         )
     }
 }
