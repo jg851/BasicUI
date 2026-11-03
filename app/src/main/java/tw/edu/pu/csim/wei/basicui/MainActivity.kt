@@ -1,12 +1,14 @@
 package tw.edu.pu.csim.wei.basicui
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,8 +23,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -37,6 +41,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -72,7 +78,7 @@ fun LazyColumnExample(modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .alpha(0.0f), // 設為 0.0f 即完全透明，數字不會再干擾畫面
+            .alpha(0.0f), // 底層數字列表設為完全透明
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -93,6 +99,7 @@ fun LazyColumnExample(modifier: Modifier = Modifier) {
 @Composable
 fun ColumnExample(modifier: Modifier = Modifier) {
     var gestureMessage by remember { mutableStateOf("請嘗試：短按、連點兩下或長按") }
+    val context = LocalContext.current
 
     Column(
         modifier = modifier
@@ -100,7 +107,10 @@ fun ColumnExample(modifier: Modifier = Modifier) {
             .background(Color(0x8AE0BBE4))
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onTap = { gestureMessage = "短按" },
+                    onTap = {
+                        gestureMessage = "短按"
+                        Toast.makeText(context, "觸發了短按！", Toast.LENGTH_SHORT).show()
+                    },
                     onDoubleTap = { gestureMessage = "連點兩下" },
                     onLongPress = { gestureMessage = "長按" }
                 )
@@ -130,6 +140,8 @@ data class Animal(
 
 @Composable
 fun LazyRowExample(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
     val animals = listOf(
         Animal("鴨子", R.drawable.animal0),
         Animal("企鵝", R.drawable.animal1),
@@ -148,21 +160,38 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        items(animals) { animal ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(horizontal = 4.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = animal.imageRes),
-                    contentDescription = animal.name,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(Color.White)
+        itemsIndexed(animals) { index, animal ->
+            Card(
+                modifier = Modifier
+                    .width(180.dp) // 調整卡片寬度，讓它變成較大的區塊
+                    .height(220.dp)
+                    .clickable {
+                        Toast.makeText(context, "你點擊了第 $index 個動物：${animal.name}", Toast.LENGTH_SHORT).show()
+                    },
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFD0BCFF)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = animal.name)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    // 將圖片改為較大的矩形尺寸，並設定 contentScale 確保圖片不變形
+                    Image(
+                        painter = painterResource(id = animal.imageRes),
+                        contentDescription = animal.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "$index: ${animal.name}")
+                }
             }
         }
     }
