@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -86,22 +88,27 @@ fun SimpleVideoPlayer(
     val context = LocalContext.current
 
     val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            val uri = "android.resource://${context.packageName}/$videoRes"
-            setMediaItem(MediaItem.fromUri(uri))
-            prepare()
-            playWhenReady = true // 載入完成自動播放
-        }
+        ExoPlayer.Builder(context).build()
     }
 
-    // 利用 DisposableEffect 管理生命週期，離開畫面時自動釋放記憶體
+    // 當切換影片時自動暫停舊影片，並載入新影片播放
+    LaunchedEffect(videoRes) {
+        exoPlayer.pause()
+        val uri = "android.resource://${context.packageName}/$videoRes"
+        val mediaItem = MediaItem.fromUri(uri)
+        exoPlayer.setMediaItem(mediaItem)
+        exoPlayer.prepare()
+        exoPlayer.playWhenReady = true
+    }
+
+    // 離開畫面時暫停並釋放資源
     DisposableEffect(Unit) {
         onDispose {
+            exoPlayer.pause()
             exoPlayer.release()
         }
     }
 
-    // 將原生的 PlayerView 嵌入 Compose
     AndroidView(
         factory = { ctx ->
             PlayerView(ctx).apply {
@@ -110,7 +117,7 @@ fun SimpleVideoPlayer(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(170.dp)
     )
 }
 
@@ -119,7 +126,7 @@ fun LazyColumnExample(modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .alpha(0.0f), // 底層數字列表設為完全透明
+            .alpha(0.0f), // 底層透明列表
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -140,12 +147,14 @@ fun LazyColumnExample(modifier: Modifier = Modifier) {
 @Composable
 fun ColumnExample(modifier: Modifier = Modifier) {
     var gestureMessage by remember { mutableStateOf("請嘗試：短按、連點兩下或長按") }
+    var currentVideoRes by remember { mutableStateOf(R.raw.love) }
     val context = LocalContext.current
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0x8AE0BBE4))
+            .padding(horizontal = 16.dp, vertical = 12.dp)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = {
@@ -156,26 +165,52 @@ fun ColumnExample(modifier: Modifier = Modifier) {
                     onLongPress = { gestureMessage = "長按" }
                 )
             },
-        verticalArrangement = Arrangement.Top,
+        verticalArrangement = Arrangement.SpaceBetween, // 讓版面上下舒展開來，背景不擁擠
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        // 上半部：影片與作者資訊
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Spacer(modifier = Modifier.height(4.dp))
+            SimpleVideoPlayer(videoRes = currentVideoRes)
 
-        // 💡 影片放在最上面
-        SimpleVideoPlayer(videoRes = R.raw.love)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("行動應用軟體開發：基本元件")
+            Text("作者：魏仁楷 ")
 
-        Spacer(modifier = Modifier.height(12.dp))
-        Text("行動應用軟體開發：基本元件")
-        Text("作者：魏仁楷 ")
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(text = gestureMessage)
 
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = gestureMessage)
+            Spacer(modifier = Modifier.height(6.dp))
+            RowExample()
+        }
 
-        Spacer(modifier = Modifier.height(8.dp))
-        RowExample()
+        // 中間：切換影片按鈕（按下後影片會跟著同步切換並暫停舊影片）
+        Button(
+            onClick = {
+                currentVideoRes = if (currentVideoRes == R.raw.love) {
+                    R.raw.handpan
+                } else {
+                    R.raw.love
+                }
+                Toast.makeText(context, "已切換影片", Toast.LENGTH_SHORT).show()
+            },
+            modifier = Modifier.padding(vertical = 4.dp)
+        ) {
+            Text(text = if (currentVideoRes == R.raw.love) "切換至 Handpan 影片" else "切換至 Love 影片")
+        }
 
-        Spacer(modifier = Modifier.height(8.dp))
-        LazyRowExample()
+        // 下半部：動物卡片橫向列表（預留底部 TextField 空間）
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 50.dp)
+        ) {
+            LazyRowExample()
+        }
     }
 }
 
@@ -209,8 +244,8 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
         itemsIndexed(animals) { index, animal ->
             Card(
                 modifier = Modifier
-                    .width(160.dp)
-                    .height(200.dp)
+                    .width(150.dp)
+                    .height(180.dp)
                     .clickable {
                         Toast.makeText(context, "你點擊了第 $index 個動物：${animal.name}", Toast.LENGTH_SHORT).show()
                     },
@@ -232,9 +267,9 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(120.dp)
+                            .height(100.dp)
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(text = "$index: ${animal.name}")
                 }
             }
@@ -249,7 +284,7 @@ fun TextFieldExample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(bottom = 16.dp),
+            .padding(bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
     ) {
@@ -261,7 +296,7 @@ fun TextFieldExample(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(0.8f)
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = if (inputText.isBlank()) "尚未輸入內容" else "您輸入的是：$inputText"
@@ -276,7 +311,7 @@ fun RowExample(modifier: Modifier = Modifier) {
             painter = painterResource(id = R.drawable.android),
             contentDescription = "Android icon",
             modifier = Modifier
-                .size(70.dp)
+                .size(60.dp)
                 .clip(CircleShape)
                 .background(Color.Yellow),
             alpha = 0.6f,
@@ -287,7 +322,7 @@ fun RowExample(modifier: Modifier = Modifier) {
         Image(
             painter = painterResource(id = R.drawable.compose),
             contentDescription = "Compose icon",
-            modifier = Modifier.size(70.dp)
+            modifier = Modifier.size(60.dp)
         )
     }
 }
